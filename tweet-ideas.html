@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Orientation Tweet Extractor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient-start: #1f2937;
+      --bg-gradient-end: #111827;
+      --card-bg: rgba(31, 41, 55, 0.5);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-heading: #ffffff;
+      --accent-primary: #22d3ee;
+      --accent-hover: #67e8f9;
+      --accent-success: #34d399;
+      --input-bg: #374151;
+      --code-bg: rgba(0, 0, 0, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container { max-width: 850px; width: 100%; margin: 0 auto; flex-grow: 1; }
+    header { text-align: center; margin-bottom: 40px; }
+    h1 { font-size: 2.5rem; font-weight: 700; color: var(--text-heading); letter-spacing: -1px; margin-bottom: 10px; }
+    p.subtitle { font-size: 1.1rem; color: var(--text-secondary); }
+    
+    .prompt-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 var(--shadow-color);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 30px;
+    }
+
+    .section-label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* Input Styling */
+    textarea#sourceContent {
+      width: 100%;
+      min-height: 180px;
+      background-color: var(--input-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 12px;
+      padding: 15px;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      margin-bottom: 25px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea#sourceContent:focus { border-color: var(--accent-primary); }
+
+    /* Preview Styling */
+    .prompt-preview {
+      background-color: var(--code-bg);
+      padding: 20px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      border: 1px solid var(--card-border);
+      margin-bottom: 25px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* Button Styling */
+    .copy-button {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--bg-gradient-end);
+      background-color: var(--accent-primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .copy-button:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+    .copy-button.copied { background-color: var(--accent-success); }
+    .icon { width: 20px; height: 20px; }
+    .copied-icon { display: none; }
+    .copy-button.copied .copy-icon { display: none; }
+    .copy-button.copied .copied-icon { display: inline-block; }
+
+    footer { padding: 40px 0; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Orientation Tweet Extractor</h1>
+      <p class="subtitle">Extract complete orientation moments from long-form writing.</p>
+    </header>
+
+    <main>
+      <div class="prompt-card">
+        
+        <label class="section-label" for="sourceContent">1. Paste Article / Blog Post / Lead Magnet:</label>
+        <textarea id="sourceContent" placeholder="Paste your long-form text here..."></textarea>
+
+        <label class="section-label">2. Generated AI Prompt (Auto-updates):</label>
+        <div id="promptOutput" class="prompt-preview"></div>
+
+        <button class="copy-button" id="copyBtn">
+          <svg class="icon copy-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
+          <svg class="icon copied-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+          <span id="btnLabel">Copy Extraction Prompt</span>
+        </button>
+      </div>
+    </main>
+
+    <footer>
+      <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script> Siva Prasad Mukherjee. All Rights Reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    const sourceContent = document.getElementById('sourceContent');
+    const promptOutput = document.getElementById('promptOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    const btnLabel = document.getElementById('btnLabel');
+
+    const tweetPromptTemplate = `ROLE
+You are an assistant helping me extract orientation-focused tweets from my long-form writing for use on X (Twitter).
+
+CORE PRINCIPLE (NON-NEGOTIABLE)
+I write tweets to help people orient themselves, not to move them somewhere. Tweets must stand alone as complete orientation moments.
+
+CONTEXT & CONSTRAINTS
+● Do NOT extract main points, conclusions, frameworks, steps, or solutions.
+● Do NOT summarize the source.
+● Do NOT explain, instruct, persuade, or resolve.
+● Do NOT include calls to action, emojis, or hashtags.
+● Tone: calm, grounded, reflective, non-performative.
+
+CATEGORIES TO EXTRACT:
+1. Confusion → Clarity (Names a confusion, removes a false assumption)
+2. Anti-Hype Boundary (Calmly rejects a popular but unhelpful belief)
+3. Micro-Reflection (Short, grounded reflection; emotionally accurate)
+
+SELF-SCORING FILTER (KEEP Score 4-5 ONLY)
+1. Names real confusion?
+2. Removes false assumption?
+3. Feels complete alone?
+4. No urgency/curiosity gap?
+5. Leaves reader calmer?
+
+CONTENT TO EXTRACT FROM:
+`;
+
+    function updatePrompt() {
+      const userText = sourceContent.value.trim() || "[PASTE ARTICLE / BLOG POST / LEAD MAGNET HERE]";
+      promptOutput.textContent = tweetPromptTemplate + userText + `
+
+FINAL VERIFICATION:
+"If someone reads only this tweet and nothing else, will they feel more oriented — without feeling pulled anywhere?"`;
+    }
+
+    // Listen for input
+    sourceContent.addEventListener('input', updatePrompt);
+    updatePrompt(); // Initial state
+
+    // Copy to clipboard
+    copyBtn.addEventListener('click', () => {
+      const fullText = promptOutput.textContent;
+      
+      navigator.clipboard.writeText(fullText).then(() => {
+        const originalText = btnLabel.textContent;
+        btnLabel.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        
+        setTimeout(() => {
+          btnLabel.textContent = originalText;
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        console.error('Copy failed', err);
+      });
+    });
+  </script>
+</body>
+</html>
